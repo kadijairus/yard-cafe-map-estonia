@@ -21,8 +21,8 @@ function escapeHtml(text: string): string {
 }
 
 function createLocationIcon(kind: PlaceKind, nr: string, isSelected: boolean): L.DivIcon {
-  const ringClass = isSelected
-    ? 'ring-4 ring-slate-950/35 scale-110'
+  const selectedClass = isSelected
+    ? 'scale-115 drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]'
     : 'transition-transform duration-150 hover:scale-105';
   const safeNr = escapeHtml(nr);
   const textSizeClass = nr.length >= 3 ? 'text-[13px]' : 'text-[15px]';
@@ -30,12 +30,12 @@ function createLocationIcon(kind: PlaceKind, nr: string, isSelected: boolean): L
 
   const html =
     kind === 'cafe'
-      ? `<div class="flex w-11 flex-col items-center select-none ${ringClass}"><div class="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-[#FE5855] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#FE5855] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`
-      : `<div class="flex w-11 flex-col items-center select-none ${ringClass}"><div class="flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-white bg-[#980401] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#980401] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`;
+      ? `<div class="flex w-11 flex-col items-center select-none ${selectedClass}"><div class="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-[#FE5855] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#FE5855] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`
+      : `<div class="flex w-11 flex-col items-center select-none ${selectedClass}"><div class="flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-white bg-[#980401] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#980401] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`;
 
   return L.divIcon({
     html,
-    className: '',
+    className: 'focus:outline-none',
     iconSize: [44, 46],
     iconAnchor: [22, 45],
   });
