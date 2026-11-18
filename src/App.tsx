@@ -3,6 +3,7 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import {CafeMap} from './components/CafeMap';
 import {LocationCard} from './components/LocationCard';
 import {ProgressBars} from './components/ProgressBars';
+import {getCafeDistanceDashboard} from './lib/geo';
 import {parseSheetsPayload} from './lib/sheetParser';
 import type {MapLocation} from './types/map';
 
@@ -132,6 +133,13 @@ export default function App() {
     [locations, selectedId],
   );
 
+  const distanceDashboard = useMemo(() => {
+    if (!selectedLocation || selectedLocation.kind !== 'cafe') {
+      return null;
+    }
+    return getCafeDistanceDashboard(selectedLocation, locations, visitedIds);
+  }, [selectedLocation, locations, visitedIds]);
+
   const progressStats = useMemo(() => {
     let cafesTotal = 0;
     let cafesVisited = 0;
@@ -232,6 +240,7 @@ export default function App() {
         <LocationCard
           item={selectedLocation}
           isVisited={visitedIds.has(selectedLocation.id)}
+          distanceDashboard={distanceDashboard}
           onToggleVisited={handleToggleVisited}
           onClose={handleCloseCard}
         />

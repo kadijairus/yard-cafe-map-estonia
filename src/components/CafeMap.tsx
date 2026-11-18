@@ -24,12 +24,54 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function createCafeCupHtml(nr: string, isSelected: boolean, isVisited: boolean): string {
+  const selectedClass = isSelected
+    ? 'scale-115 drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]'
+    : 'transition-transform duration-150 hover:scale-105';
+  const safeNr = escapeHtml(nr);
+  const fontSize = nr.length >= 3 ? 13 : 15;
+
+  const cupInteriorSvg = isVisited
+    ? `<ellipse cx="23" cy="13.5" rx="14" ry="5.3" fill="#CDB8A4" />
+       <ellipse cx="23" cy="14.5" rx="13.2" ry="4.5" fill="#F3EAE0" />`
+    : `<ellipse cx="23" cy="13.5" rx="14" ry="5.3" fill="#E8C38E" />
+       <ellipse cx="23" cy="14.5" rx="12.8" ry="4.3" fill="#3F2312" />`;
+
+  const checkmarkSvg = isVisited
+    ? '<g transform="translate(31, 2)"><circle cx="8" cy="8" r="8" fill="#15803D" stroke="#FFFFFF" stroke-width="2" /><path d="M 4.5 8.2 L 7 10.6 L 11.5 5.6" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></g>'
+    : '';
+
+  return `<div class="relative flex w-[52px] items-center justify-center select-none ${selectedClass}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="52" height="58" viewBox="0 0 52 58" class="overflow-visible drop-shadow-[0_3px_6px_rgba(0,0,0,0.4)]" aria-hidden="true">
+      <path d="M 13 38 L 23 53.5 L 33 38 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="4.5" stroke-linejoin="round" />
+      <path d="M 38 20 C 48.5 19.5, 48.5 34.5, 36.5 34" fill="none" stroke="#FFFFFF" stroke-width="10.5" stroke-linecap="round" />
+      <ellipse cx="23" cy="13.5" rx="17" ry="7.5" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6" />
+      <path d="M 6 13.5 C 6 33, 12 43.5, 23 43.5 C 34 43.5, 40 33, 40 13.5 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round" />
+      <path d="M 38 20 C 48.5 19.5, 48.5 34.5, 36.5 34" fill="none" stroke="#FE5855" stroke-width="5" stroke-linecap="round" />
+      <path d="M 6 13.5 C 6 33, 12 43.5, 23 43.5 C 34 43.5, 40 33, 40 13.5 Z" fill="#FE5855" />
+      <ellipse cx="23" cy="13.5" rx="17" ry="7.5" fill="#FE5855" />
+      ${cupInteriorSvg}
+      <text x="23" y="32.5" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="system-ui, -apple-system, sans-serif" font-size="${fontSize}" font-weight="700">${safeNr}</text>
+      ${checkmarkSvg}
+    </svg>
+  </div>`;
+}
+
 function createLocationIcon(
   kind: PlaceKind,
   nr: string,
   isSelected: boolean,
   isVisited: boolean,
 ): L.DivIcon {
+  if (kind === 'cafe') {
+    return L.divIcon({
+      html: createCafeCupHtml(nr, isSelected, isVisited),
+      className: 'focus:outline-none',
+      iconSize: [52, 58],
+      iconAnchor: [23, 56],
+    });
+  }
+
   const selectedClass = isSelected
     ? 'scale-115 drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]'
     : 'transition-transform duration-150 hover:scale-105';
@@ -40,10 +82,7 @@ function createLocationIcon(
     ? `<span class="absolute top-0 right-0 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-white bg-[#15803D] text-white shadow-sm">${CHECKMARK_SVG}</span>`
     : '';
 
-  const html =
-    kind === 'cafe'
-      ? `<div class="relative flex w-12 flex-col items-center pt-1 select-none ${selectedClass}"><div class="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-[#FE5855] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#FE5855] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div>${visitedBadgeHtml}</div>`
-      : `<div class="relative flex w-12 flex-col items-center pt-1 select-none ${selectedClass}"><div class="flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-white bg-[#980401] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#980401] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div>${visitedBadgeHtml}</div>`;
+  const html = `<div class="relative flex w-12 flex-col items-center pt-1 select-none ${selectedClass}"><div class="flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-white bg-[#980401] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#980401] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div>${visitedBadgeHtml}</div>`;
 
   return L.divIcon({
     html,

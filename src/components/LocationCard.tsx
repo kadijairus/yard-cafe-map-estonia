@@ -1,17 +1,25 @@
 import {Check, Clock, ExternalLink, MapPin, X} from 'lucide-react';
 import {useEffect} from 'react';
+import type {CafeDistanceDashboard} from '../lib/geo';
 import type {MapLocation} from '../types/map';
 
 interface LocationCardProps {
   item: MapLocation;
   isVisited: boolean;
+  distanceDashboard?: CafeDistanceDashboard | null;
   onToggleVisited: (id: string) => void;
   onClose: () => void;
+}
+
+function formatCafeTarget(cafe: MapLocation): string {
+  const label = cafe.name || cafe.location || cafe.id;
+  return cafe.nr ? `${cafe.nr}. ${label}` : label;
 }
 
 export function LocationCard({
   item,
   isVisited,
+  distanceDashboard,
   onToggleVisited,
   onClose,
 }: LocationCardProps) {
@@ -143,6 +151,29 @@ export function LocationCard({
               <span>Ürituse link</span>
               <ExternalLink size={17} strokeWidth={2.2} aria-hidden="true" />
             </a>
+          </div>
+        )}
+
+        {item.kind === 'cafe' && distanceDashboard && (
+          <div className="mt-4 border-t border-slate-100 pt-3">
+            {distanceDashboard.nearest && distanceDashboard.farthest ? (
+              <div className="space-y-1 text-sm text-slate-800">
+                <p className="tabular-nums">
+                  <span className="font-semibold text-slate-900">Lähim:</span>{' '}
+                  {formatCafeTarget(distanceDashboard.nearest.cafe)},{' '}
+                  {distanceDashboard.nearest.distanceMeters} m
+                </p>
+                <p className="tabular-nums">
+                  <span className="font-semibold text-slate-900">Kaugeim:</span>{' '}
+                  {formatCafeTarget(distanceDashboard.farthest.cafe)},{' '}
+                  {distanceDashboard.farthest.distanceMeters} m
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">
+                Rohkem külastamata kohvikuid pole
+              </p>
+            )}
           </div>
         )}
       </div>
