@@ -99,6 +99,7 @@ export function csvToRawRows(csvText: string, kind: PlaceKind): RawSheetRow[] {
   const descIdx = colIndex('description');
   const menuIdx = colIndex('menu');
   const openIdx = colIndex('open');
+  const nrIdx = colIndex('nr');
 
   if (idIdx === -1 || showIdx === -1 || latIdx === -1 || lonIdx === -1) {
     return [];
@@ -125,6 +126,7 @@ export function csvToRawRows(csvText: string, kind: PlaceKind): RawSheetRow[] {
       description: getCell(row, descIdx),
       menu: kind === 'cafe' ? getCell(row, menuIdx) : '',
       open: getCell(row, openIdx),
+      nr: getCell(row, nrIdx),
       kind,
     });
   }
@@ -162,6 +164,7 @@ export function parseLocations(rows: RawSheetRow[]): MapLocation[] {
       description: row.description.trim(),
       menu: row.menu.trim(),
       open: row.open.trim(),
+      nr: row.nr.trim(),
     });
   }
 

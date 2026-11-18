@@ -46,23 +46,54 @@ function extractSheetId(input: string): string {
   return match && match[1] ? match[1] : input;
 }
 
-function buildCsvUrlsFromEnv(): {cafesUrl: string; eventsUrl: string} {
+async function fetchSheetGids(sheetId: string): Promise<Record<string, string>> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/htmlview`;
+    const response = await fetch(url, {signal: controller.signal});
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const html = await response.text();
+    const gids: Record<string, string> = {};
+    const pattern = /items\.push\(\{name:\s*"([^"]+)"[^}]*?gid:\s*"([0-9]+)"/g;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(html)) !== null) {
+      gids[match[1]] = match[2];
+    }
+    return gids;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function resolveCsvUrlsFromEnv(): Promise<{cafesUrl: string; eventsUrl: string}> {
   const rawCafes = process.env.GOOGLE_SHEET_CAFES_URL?.trim() || '';
   const rawEvents = process.env.GOOGLE_SHEET_EVENTS_URL?.trim() || '';
   const rawSheetId = process.env.GOOGLE_SHEET_ID?.trim() || DEFAULT_GOOGLE_SHEET_ID;
   const sheetId = rawSheetId ? extractSheetId(rawSheetId) : '';
 
-  const cafesUrl = rawCafes
-    ? normalizeSheetCsvUrl(rawCafes, 'Kohvikud')
-    : sheetId
-      ? `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=Kohvikud`
-      : '';
+  if (rawCafes || rawEvents) {
+    return {
+      cafesUrl: rawCafes ? normalizeSheetCsvUrl(rawCafes, 'Kohvikud') : '',
+      eventsUrl: rawEvents ? normalizeSheetCsvUrl(rawEvents, 'Tegevused') : '',
+    };
+  }
 
-  const eventsUrl = rawEvents
-    ? normalizeSheetCsvUrl(rawEvents, 'Tegevused')
-    : sheetId
-      ? `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=Tegevused`
-      : '';
+  if (!sheetId) {
+    return {cafesUrl: '', eventsUrl: ''};
+  }
+
+  const gids = await fetchSheetGids(sheetId);
+  const cafesUrl = gids['Kohvikud']
+    ? `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/export?format=csv&gid=${encodeURIComponent(gids['Kohvikud'])}`
+    : `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=Kohvikud`;
+  const eventsUrl = gids['Tegevused']
+    ? `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/export?format=csv&gid=${encodeURIComponent(gids['Tegevused'])}`
+    : `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=Tegevused`;
 
   return {cafesUrl, eventsUrl};
 }
@@ -116,10 +147,10 @@ async function startServer() {
       return;
     }
 
-    const {cafesUrl, eventsUrl} = buildCsvUrlsFromEnv();
+    try {
+      const {cafesUrl, eventsUrl} = await resolveCsvUrlsFromEnv();
 
-    if (!cafesUrl && !eventsUrl) {
-      try {
+      if (!cafesUrl && !eventsUrl) {
         const cafesCsv = await loadBundledCsv();
         const payload: CachedSheetsPayload = {
           cafesCsv,
@@ -130,13 +161,9 @@ async function startServer() {
         cachedPayload = payload;
         res.setHeader('Cache-Control', 'public, max-age=60');
         res.json(payload);
-      } catch {
-        res.status(502).json({error: 'Kaarti ei õnnestunud uuendada'});
+        return;
       }
-      return;
-    }
 
-    try {
       const [cafesCsv, eventsCsv] = await Promise.all([
         cafesUrl ? fetchCsvText(cafesUrl) : Promise.resolve(''),
         eventsUrl ? fetchCsvText(eventsUrl) : Promise.resolve(''),

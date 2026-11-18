@@ -11,21 +11,27 @@ interface CafeMapProps {
 const SIKUPILLI_CENTER: [number, number] = [59.4314, 24.7988];
 const DEFAULT_ZOOM = 15;
 
-const CAFE_ICON_SVG =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg>';
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-const EVENT_ICON_SVG =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>';
-
-function createLocationIcon(kind: PlaceKind, isSelected: boolean): L.DivIcon {
+function createLocationIcon(kind: PlaceKind, nr: string, isSelected: boolean): L.DivIcon {
   const ringClass = isSelected
     ? 'ring-4 ring-slate-950/35 scale-110'
     : 'transition-transform duration-150 hover:scale-105';
+  const safeNr = escapeHtml(nr);
+  const textSizeClass = nr.length >= 3 ? 'text-[13px]' : 'text-[15px]';
+  const labelHtml = `<span class="${textSizeClass} font-bold leading-none tracking-tight tabular-nums">${safeNr}</span>`;
 
   const html =
     kind === 'cafe'
-      ? `<div class="flex w-11 flex-col items-center select-none ${ringClass}"><div class="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-[#FE5855] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${CAFE_ICON_SVG}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#FE5855] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`
-      : `<div class="flex w-11 flex-col items-center select-none ${ringClass}"><div class="flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-white bg-[#980401] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${EVENT_ICON_SVG}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#980401] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`;
+      ? `<div class="flex w-11 flex-col items-center select-none ${ringClass}"><div class="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-[#FE5855] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#FE5855] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`
+      : `<div class="flex w-11 flex-col items-center select-none ${ringClass}"><div class="flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-white bg-[#980401] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#980401] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`;
 
   return L.divIcon({
     html,
@@ -39,7 +45,9 @@ export function CafeMap({locations, selectedId, onSelectLocation}: CafeMapProps)
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
-  const markersByIdRef = useRef<Record<string, {marker: L.Marker; kind: PlaceKind}>>({});
+  const markersByIdRef = useRef<Record<string, {marker: L.Marker; kind: PlaceKind; nr: string}>>(
+    {},
+  );
   const onSelectRef = useRef(onSelectLocation);
   const hasFittedBoundsRef = useRef(false);
 
@@ -114,7 +122,7 @@ export function CafeMap({locations, selectedId, onSelectLocation}: CafeMapProps)
     for (const item of locations) {
       const displayName = item.name || item.location || item.id;
       const marker = L.marker([item.lat, item.lng], {
-        icon: createLocationIcon(item.kind, item.id === selectedId),
+        icon: createLocationIcon(item.kind, item.nr, item.id === selectedId),
         interactive: true,
         keyboard: true,
         title: displayName,
@@ -135,7 +143,7 @@ export function CafeMap({locations, selectedId, onSelectLocation}: CafeMapProps)
       });
 
       marker.addTo(markersLayer);
-      markersByIdRef.current[item.id] = {marker, kind: item.kind};
+      markersByIdRef.current[item.id] = {marker, kind: item.kind, nr: item.nr};
     }
 
     if (!hasFittedBoundsRef.current) {
@@ -153,7 +161,7 @@ export function CafeMap({locations, selectedId, onSelectLocation}: CafeMapProps)
   useEffect(() => {
     const entries = Object.entries(markersByIdRef.current);
     for (const [id, entry] of entries) {
-      entry.marker.setIcon(createLocationIcon(entry.kind, id === selectedId));
+      entry.marker.setIcon(createLocationIcon(entry.kind, entry.nr, id === selectedId));
       entry.marker.setZIndexOffset(id === selectedId ? 500 : 0);
     }
   }, [selectedId]);

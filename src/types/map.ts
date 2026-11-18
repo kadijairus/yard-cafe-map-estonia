@@ -11,6 +11,7 @@ export interface RawSheetRow {
   description: string;
   menu: string;
   open: string;
+  nr: string;
   kind: PlaceKind;
 }
 
@@ -25,4 +26,5 @@ export interface MapLocation {
   description: string;
   menu: string;
   open: string;
+  nr: string;
 }
