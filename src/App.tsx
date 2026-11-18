@@ -150,7 +150,7 @@ export default function App() {
           role="status"
           className="fixed top-3 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-950 shadow-md"
         >
-          <span className="whitespace-nowrap">Kuvatakse salvestatud andmed</span>
+          <span className="whitespace-nowrap">Kaarti ei õnnestunud uuendada</span>
           <button
             type="button"
             onClick={() => void loadLocations(true)}
