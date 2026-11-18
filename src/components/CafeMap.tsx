@@ -5,11 +5,15 @@ import type {MapLocation, PlaceKind} from '../types/map';
 interface CafeMapProps {
   locations: MapLocation[];
   selectedId: string | null;
+  visitedIds: Set<string>;
   onSelectLocation: (location: MapLocation | null) => void;
 }
 
 const SIKUPILLI_CENTER: [number, number] = [59.4314, 24.7988];
 const DEFAULT_ZOOM = 15;
+
+const CHECKMARK_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 
 function escapeHtml(text: string): string {
   return text
@@ -20,28 +24,41 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function createLocationIcon(kind: PlaceKind, nr: string, isSelected: boolean): L.DivIcon {
+function createLocationIcon(
+  kind: PlaceKind,
+  nr: string,
+  isSelected: boolean,
+  isVisited: boolean,
+): L.DivIcon {
   const selectedClass = isSelected
     ? 'scale-115 drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]'
     : 'transition-transform duration-150 hover:scale-105';
   const safeNr = escapeHtml(nr);
   const textSizeClass = nr.length >= 3 ? 'text-[13px]' : 'text-[15px]';
   const labelHtml = `<span class="${textSizeClass} font-bold leading-none tracking-tight tabular-nums">${safeNr}</span>`;
+  const visitedBadgeHtml = isVisited
+    ? `<span class="absolute top-0 right-0 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-white bg-[#15803D] text-white shadow-sm">${CHECKMARK_SVG}</span>`
+    : '';
 
   const html =
     kind === 'cafe'
-      ? `<div class="flex w-11 flex-col items-center select-none ${selectedClass}"><div class="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-[#FE5855] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#FE5855] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`
-      : `<div class="flex w-11 flex-col items-center select-none ${selectedClass}"><div class="flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-white bg-[#980401] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#980401] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div></div>`;
+      ? `<div class="relative flex w-12 flex-col items-center pt-1 select-none ${selectedClass}"><div class="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-[#FE5855] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#FE5855] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div>${visitedBadgeHtml}</div>`
+      : `<div class="relative flex w-12 flex-col items-center pt-1 select-none ${selectedClass}"><div class="flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-white bg-[#980401] text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">${labelHtml}</div><div class="-mt-1.5 h-2.5 w-2.5 rotate-45 border-r-[3px] border-b-[3px] border-white bg-[#980401] shadow-[2px_2px_4px_rgba(0,0,0,0.25)]"></div>${visitedBadgeHtml}</div>`;
 
   return L.divIcon({
     html,
     className: 'focus:outline-none',
-    iconSize: [44, 46],
-    iconAnchor: [22, 45],
+    iconSize: [48, 49],
+    iconAnchor: [24, 48],
   });
 }
 
-export function CafeMap({locations, selectedId, onSelectLocation}: CafeMapProps) {
+export function CafeMap({
+  locations,
+  selectedId,
+  visitedIds,
+  onSelectLocation,
+}: CafeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
@@ -122,7 +139,12 @@ export function CafeMap({locations, selectedId, onSelectLocation}: CafeMapProps)
     for (const item of locations) {
       const displayName = item.name || item.location || item.id;
       const marker = L.marker([item.lat, item.lng], {
-        icon: createLocationIcon(item.kind, item.nr, item.id === selectedId),
+        icon: createLocationIcon(
+          item.kind,
+          item.nr,
+          item.id === selectedId,
+          visitedIds.has(item.id),
+        ),
         interactive: true,
         keyboard: true,
         title: displayName,
@@ -132,7 +154,7 @@ export function CafeMap({locations, selectedId, onSelectLocation}: CafeMapProps)
       if (supportsHover && displayName) {
         marker.bindTooltip(displayName, {
           direction: 'top',
-          offset: [0, -46],
+          offset: [0, -48],
           opacity: 0.96,
         });
       }
@@ -151,7 +173,8 @@ export function CafeMap({locations, selectedId, onSelectLocation}: CafeMapProps)
         locations.map((item) => [item.lat, item.lng] as [number, number]),
       );
       map.fitBounds(bounds, {
-        padding: [48, 48],
+        paddingTopLeft: [40, 88],
+        paddingBottomRight: [40, 48],
         maxZoom: 16,
       });
       hasFittedBoundsRef.current = true;
@@ -161,10 +184,14 @@ export function CafeMap({locations, selectedId, onSelectLocation}: CafeMapProps)
   useEffect(() => {
     const entries = Object.entries(markersByIdRef.current);
     for (const [id, entry] of entries) {
-      entry.marker.setIcon(createLocationIcon(entry.kind, entry.nr, id === selectedId));
-      entry.marker.setZIndexOffset(id === selectedId ? 500 : 0);
+      const isSelected = id === selectedId;
+      const isVisited = visitedIds.has(id);
+      entry.marker.setIcon(
+        createLocationIcon(entry.kind, entry.nr, isSelected, isVisited),
+      );
+      entry.marker.setZIndexOffset(isSelected ? 500 : 0);
     }
-  }, [selectedId]);
+  }, [selectedId, visitedIds]);
 
   return (
     <div

@@ -1,13 +1,20 @@
-import {Clock, ExternalLink, MapPin, X} from 'lucide-react';
+import {Check, Clock, ExternalLink, MapPin, X} from 'lucide-react';
 import {useEffect} from 'react';
 import type {MapLocation} from '../types/map';
 
 interface LocationCardProps {
   item: MapLocation;
+  isVisited: boolean;
+  onToggleVisited: (id: string) => void;
   onClose: () => void;
 }
 
-export function LocationCard({item, onClose}: LocationCardProps) {
+export function LocationCard({
+  item,
+  isVisited,
+  onToggleVisited,
+  onClose,
+}: LocationCardProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -26,7 +33,7 @@ export function LocationCard({item, onClose}: LocationCardProps) {
       role="dialog"
       aria-modal="false"
       aria-labelledby="location-card-title"
-      className="fixed inset-x-0 bottom-0 z-[1000] flex max-h-[75dvh] flex-col rounded-t-3xl bg-white text-slate-950 shadow-[0_-8px_32px_rgba(0,0,0,0.22)] md:inset-x-auto md:bottom-4 md:left-4 md:max-h-[calc(100dvh-2rem)] md:w-[390px] md:rounded-2xl md:border md:border-slate-200 md:shadow-xl"
+      className="fixed inset-x-0 bottom-0 z-[1000] flex max-h-[75dvh] flex-col rounded-t-3xl bg-white text-slate-950 shadow-[0_-8px_32px_rgba(0,0,0,0.22)] md:inset-x-auto md:bottom-4 md:left-4 md:max-h-[calc(100dvh-7rem)] md:w-[390px] md:rounded-2xl md:border md:border-slate-200 md:shadow-xl"
     >
       <div className="flex justify-center pt-2.5 pb-1 md:hidden" aria-hidden="true">
         <div className="h-1.5 w-10 rounded-full bg-slate-300" />
@@ -50,6 +57,32 @@ export function LocationCard({item, onClose}: LocationCardProps) {
           className="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
         >
           <X size={22} strokeWidth={2.2} />
+        </button>
+      </div>
+
+      <div className="border-t border-slate-100 px-5 py-2">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isVisited}
+          onClick={() => onToggleVisited(item.id)}
+          className="flex min-h-[44px] w-full items-center justify-between gap-4 rounded-xl py-1 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+        >
+          <span className="text-[15px] font-medium text-slate-900">Külastatud</span>
+          <span
+            aria-hidden="true"
+            className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-full bg-slate-200 p-1 transition-colors duration-150"
+          >
+            <span
+              className={`flex h-6 w-6 items-center justify-center rounded-full shadow-sm transition-transform duration-150 ${
+                isVisited
+                  ? 'translate-x-6 bg-[#15803D] text-white'
+                  : 'translate-x-0 border border-slate-300 bg-white text-transparent'
+              }`}
+            >
+              <Check size={15} strokeWidth={3} />
+            </span>
+          </span>
         </button>
       </div>
 
@@ -105,7 +138,7 @@ export function LocationCard({item, onClose}: LocationCardProps) {
               href={item.eventLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#1877F2] px-4 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#166FE5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1877F2]"
             >
               <span>Ürituse link</span>
               <ExternalLink size={17} strokeWidth={2.2} aria-hidden="true" />
