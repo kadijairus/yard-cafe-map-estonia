@@ -133,7 +133,7 @@ export function LocationCard({
 
         {item.menu && (
           <div className="mt-4 border-t border-slate-100 pt-3">
-            <h3 className="text-xs font-semibold tracking-wide text-slate-500">Menüü</h3>
+            <h3 className="text-base font-semibold tracking-wide text-slate-500">Menüü</h3>
             <p className="mt-1.5 whitespace-pre-line text-[15px] leading-relaxed text-slate-900">
               {item.menu}
             </p>
@@ -157,17 +157,20 @@ export function LocationCard({
         {item.kind === 'cafe' && distanceDashboard && (
           <div className="mt-4 border-t border-slate-100 pt-3">
             {distanceDashboard.nearest && distanceDashboard.farthest ? (
-              <div className="space-y-1 text-sm text-slate-800">
-                <p className="tabular-nums">
-                  <span className="font-semibold text-slate-900">Lähim:</span>{' '}
-                  {formatCafeTarget(distanceDashboard.nearest.cafe)},{' '}
-                  {distanceDashboard.nearest.distanceMeters} m
-                </p>
-                <p className="tabular-nums">
-                  <span className="font-semibold text-slate-900">Kaugeim:</span>{' '}
-                  {formatCafeTarget(distanceDashboard.farthest.cafe)},{' '}
-                  {distanceDashboard.farthest.distanceMeters} m
-                </p>
+              <div>
+                <h3 className="text-base font-semibold tracking-wide text-slate-500">
+                  Külastamata kohvikud
+                </h3>
+                <div className="mt-1.5 space-y-1 text-sm text-slate-800">
+                  <p className="tabular-nums">
+                    Lähim: {formatCafeTarget(distanceDashboard.nearest.cafe)},{' '}
+                    {distanceDashboard.nearest.distanceMeters} m
+                  </p>
+                  <p className="tabular-nums">
+                    Kaugeim: {formatCafeTarget(distanceDashboard.farthest.cafe)},{' '}
+                    {distanceDashboard.farthest.distanceMeters} m
+                  </p>
+                </div>
               </div>
             ) : (
               <p className="text-sm text-slate-600">
