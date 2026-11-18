@@ -133,13 +133,16 @@ export function csvToRawRows(csvText: string, kind: PlaceKind): RawSheetRow[] {
 }
 
 export function parseLocations(rows: RawSheetRow[]): MapLocation[] {
-  const seenIds: Record<string, true> = {};
+  const seenIds = new Set<string>();
   const result: MapLocation[] = [];
 
   for (const row of rows) {
     const id = row.id.trim();
     if (!id) continue;
-    if (seenIds[id]) continue;
+
+    const normalizedId = id.replace(/[\s\u200B-\u200D\uFEFF]+/g, '').toUpperCase();
+    if (seenIds.has(normalizedId)) continue;
+    seenIds.add(normalizedId);
 
     if (row.showOnMap.trim() !== 'Yes') continue;
 
@@ -148,7 +151,6 @@ export function parseLocations(rows: RawSheetRow[]): MapLocation[] {
     if (lat === null || lng === null) continue;
     if (lat < 57.5 || lat > 59.9 || lng < 21.5 || lng > 28.3) continue;
 
-    seenIds[id] = true;
     result.push({
       id,
       kind: row.kind,
