@@ -1,12 +1,13 @@
 import {Check, Clock, ExternalLink, MapPin, X} from 'lucide-react';
 import {useEffect} from 'react';
-import type {CafeDistanceDashboard} from '../lib/geo';
+import type {CafeClusterSummary, CafeDistanceDashboard} from '../lib/geo';
 import type {MapLocation} from '../types/map';
 
 interface LocationCardProps {
   item: MapLocation;
   isVisited: boolean;
   distanceDashboard?: CafeDistanceDashboard | null;
+  largestCluster?: CafeClusterSummary | null;
   onToggleVisited: (id: string) => void;
   onClose: () => void;
 }
@@ -20,6 +21,7 @@ export function LocationCard({
   item,
   isVisited,
   distanceDashboard,
+  largestCluster,
   onToggleVisited,
   onClose,
 }: LocationCardProps) {
@@ -176,6 +178,20 @@ export function LocationCard({
               <p className="text-sm text-slate-600">
                 Rohkem külastamata kohvikuid pole
               </p>
+            )}
+
+            {largestCluster && (
+              <div className="mt-2.5 text-sm text-slate-800 tabular-nums">
+                <p>
+                  Suurim kogum siit{' '}
+                  {largestCluster.distanceMeters} m kaugusel:
+                </p>
+                <ul className="mt-1 space-y-0.5">
+                  {largestCluster.cafes.map((cafe) => (
+                    <li key={cafe.id}>{formatCafeTarget(cafe)}</li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         )}
